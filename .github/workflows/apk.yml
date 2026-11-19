@@ -41,24 +41,28 @@ jobs:
               draw.line([pent[i], (px, py)], fill=(22, 28, 36, 255), width=7)
           img.save("icon.png")
           '
-          yes | buildozer init
+          buildozer init
           python3 -c '
           with open("buildozer.spec", "r") as f:
               s = f.read()
           s = s.replace("title = My Application", "title = TahminciMentor")
           s = s.replace("package.name = myapp", "package.name = tahmincimentor")
           s = s.replace("requirements = python3,kivy", "requirements = python3,kivy,requests,urllib3,chardet,idna,certifi")
-          s = s.replace("#android.permissions = INTERNET", "android.permissions = INTERNET")
-          s = s.replace("#android.accept_sdk_license = False", "android.accept_sdk_license = True")
-          s = s.replace("#icon.filename = %(source.dir)s/data/icon.png", "icon.filename = %(source.dir)s/icon.png")
-          s = s.replace("log_level = 2", "log_level = 1")
-          s = s.replace("#android.ndk = 25b", "android.ndk = 25b")
+          s += "\nandroid.permissions = INTERNET\n"
+          s += "android.accept_sdk_license = True\n"
+          s += "icon.filename = %(source.dir)s/icon.png\n"
+          s += "android.ndk = 25b\n"
+          s += "android.api = 33\n"
+          s += "p4a.branch = develop\n"
+          s += "log_level = 2\n"
           with open("buildozer.spec", "w") as f:
               f.write(s)
           '
 
       - name: APK Derle
-        run: yes | buildozer android debug
+        env:
+          CI: "true"
+        run: buildozer android debug
 
       - name: APK Dosyasini Yayinla
         uses: actions/upload-artifact@v4
