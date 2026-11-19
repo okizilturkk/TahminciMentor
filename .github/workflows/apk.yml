@@ -1,0 +1,69 @@
+name: Build TahminciMentor APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Kodlari Cek
+        uses: actions/checkout@v4
+
+      - name: Python Kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Sistem Paketlerini Kur
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          pip install buildozer cython==0.29.36 pillow
+
+      - name: Dunya Kupasi Topu Ikonu ve Buildozer Ayarlari
+        run: |
+          python3 -c '
+          from PIL import Image, ImageDraw
+          import math
+          size = 512
+          img = Image.new("RGBA", (size, size), (12, 42, 24, 255))
+          draw = ImageDraw.Draw(img)
+          draw.ellipse([24, 24, size-24, size-24], outline=(242, 198, 50, 255), width=14)
+          cx, cy, r = size//2, size//2, 190
+          draw.ellipse([cx-r, cy-r, cx+r, cy+r], fill=(248, 250, 252, 255), outline=(20, 30, 25, 255), width=8)
+          pent = [(cx + 62*math.cos(math.radians(72*i - 90)), cy + 62*math.sin(math.radians(72*i - 90))) for i in range(5)]
+          draw.polygon(pent, fill=(22, 28, 36, 255))
+          for i in range(5):
+              ang = math.radians(72*i - 90)
+              px, py = cx + 148*math.cos(ang), cy + 148*math.sin(ang)
+              sub = [(px + 42*math.cos(math.radians(72*j + 72*i - 90)), py + 42*math.sin(math.radians(72*j + 72*i - 90))) for j in range(5)]
+              draw.polygon(sub, fill=(22, 28, 36, 255))
+              draw.line([pent[i], (px, py)], fill=(22, 28, 36, 255), width=7)
+          img.save("icon.png")
+          '
+          yes | buildozer init
+          python3 -c '
+          with open("buildozer.spec", "r") as f:
+              s = f.read()
+          s = s.replace("title = My Application", "title = TahminciMentor")
+          s = s.replace("package.name = myapp", "package.name = tahmincimentor")
+          s = s.replace("requirements = python3,kivy", "requirements = python3,kivy,requests,urllib3,chardet,idna,certifi")
+          s = s.replace("#android.permissions = INTERNET", "android.permissions = INTERNET")
+          s = s.replace("#android.accept_sdk_license = False", "android.accept_sdk_license = True")
+          s = s.replace("#icon.filename = %(source.dir)s/data/icon.png", "icon.filename = %(source.dir)s/icon.png")
+          with open("buildozer.spec", "w") as f:
+              f.write(s)
+          '
+
+      - name: APK Derle
+        run: yes | buildozer -v android debug
+
+      - name: APK Dosyasini Yayinla
+        uses: actions/upload-artifact@v4
+        with:
+          name: TahminciMentor-APK
+          path: bin/*.apk
