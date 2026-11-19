@@ -52,6 +52,7 @@ jobs:
           s = s.replace("#android.accept_sdk_license = False", "android.accept_sdk_license = True")
           s = s.replace("#icon.filename = %(source.dir)s/data/icon.png", "icon.filename = %(source.dir)s/icon.png")
           s = s.replace("log_level = 2", "log_level = 1")
+          s = s.replace("#android.ndk = 25b", "android.ndk = 25b")
           with open("buildozer.spec", "w") as f:
               f.write(s)
           '
