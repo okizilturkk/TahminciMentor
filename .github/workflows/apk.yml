@@ -13,9 +13,19 @@ jobs:
       - name: Kodlari Cek
         uses: actions/checkout@v4
 
-      - name: Dunya Kupasi Topu Ikonu ve Ayarlari Hazirla
+      - name: Python 3.11 Kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Sistem Paketlerini Kur
         run: |
-          pip install pillow buildozer
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev lld
+          pip install buildozer cython==0.29.36 pillow
+
+      - name: Dunya Kupasi Topu Ikonu ve Buildozer Ayarlari
+        run: |
           python3 -c '
           from PIL import Image, ImageDraw
           import math
@@ -41,7 +51,7 @@ jobs:
               s = f.read()
           s = s.replace("title = My Application", "title = TahminciMentor")
           s = s.replace("package.name = myapp", "package.name = tahmincimentor")
-          s = s.replace("requirements = python3,kivy", "requirements = python3==3.11.6,hostpython3==3.11.6,kivy,requests,urllib3,chardet,idna,certifi")
+          s = s.replace("requirements = python3,kivy", "requirements = python3==3.11.6,hostpython3==3.11.6,kivy==2.3.0,requests,urllib3,chardet,idna,certifi")
           s = s.replace("#android.permissions = INTERNET", "android.permissions = INTERNET")
           s = s.replace("#android.accept_sdk_license = False", "android.accept_sdk_license = True")
           s = s.replace("#icon.filename = %(source.dir)s/data/icon.png", "icon.filename = %(source.dir)s/icon.png")
@@ -51,15 +61,11 @@ jobs:
               f.write(s)
           '
 
-      - name: Resmi Buildozer Motoru ile APK Derle
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: stable
+      - name: APK Derle
+        run: yes | buildozer android debug
 
       - name: APK Dosyasini Yayinla
         uses: actions/upload-artifact@v4
         with:
           name: TahminciMentor-APK
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
